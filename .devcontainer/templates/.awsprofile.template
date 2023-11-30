@@ -1,0 +1,10 @@
+# Optional file that you can use to give friendly nicknames (e.g. "sandbox")
+# to your profiles in ~/.aws/config. This nickname file is used by the aws-profile
+# and aws-console helper scripts.
+#
+# USAGE:
+#   nickname=actual_profile_name
+#
+# EXAMPLE:
+#   sandbox=personal-sandbox-admin
+#   mgmt=personal-mgmt-admin

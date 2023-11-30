@@ -1,0 +1,95 @@
+{
+  "name": "VSCodeAWSDevContainer",
+  "dockerFile": "Dockerfile",
+  "mounts": [],
+  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "build": {
+    "args": {
+      //"PLATFORM": "linux/amd64",
+      "USER": "vscode",
+      "PYTHON_VERSION": "3.11.6",
+      "NODE_VERSION": "stable",
+      "EKS_ANYWHERE_RELEASE_VERSION": "v0.18.2",
+      "NERD_FONT_NAME": "FiraCode"
+    },
+    "runArgs": [
+      "--init"
+      //     "--platform=linux/amd64"
+    ]
+  },
+  "containerEnv": {
+    "DEVCONTAINER_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+    "REMOTE_CONTAINERS_IPC": "host",
+    "AWS_CLI_AUTO_PROMPT": "on-partial",
+    "AWS_RETRY_MODE": "standard",
+    "AWS_PAGER": ""
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    //"ghcr.io/trunk-io/devcontainer-feature/trunk": "latest"
+  },
+  //https://github.com/microsoft/vscode-remote-release/issues/6810
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "amazonwebservices.aws-toolkit-vscode",
+        "Boto3typed.boto3-ide",
+        "dbaeumer.vscode-eslint",
+        "donjayamanne.python-environment-manager",
+        "GitHub.vscode-pull-request-github",
+        "mikestead.dotenv",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "redhat.vscode-yaml",
+        "Postman.postman-for-vscode",
+        "aaron-bond.better-comments",
+        "ms-vscode-remote.remote-containers",
+        "ms-toolsai.jupyter-keymap",
+        "KevinRose.vsc-python-indent",
+        "mkhl.direnv",
+        "ms-python.mypy-type-checker",
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "matangover.mypy",
+        "ms-python.black-formatter",
+        "adpyke.codesnap",
+        "mushan.vscode-paste-image",
+        "tamasfe.even-better-toml",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "editor.fontFamily": "FiraCode Nerd Font, Menlo, Monaco, 'Courier New', monospace",
+        "files.autoSave": "off",
+        "editor.formatOnSave": true,
+        "jupyter.exportWithOutputEnabled": true,
+        "python.terminal.activateEnvironment": true,
+        "[python]": {
+          "diffEditor.ignoreTrimWhitespace": false,
+          "editor.formatOnType": true,
+          "editor.formatOnSave": false,
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        },
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.autoFormatStrings": true,
+        "python.analysis.exclude": ["cdk.out"],
+        "python.formatting.autopep8Path": "/usr/local/py-utils/bin/autopep8",
+        "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+        "python.formatting.yapfPath": "/usr/local/py-utils/bin/yapf",
+        "python.languageServer": "Pylance",
+        "python.terminal.activateEnvInCurrentTerminal": true,
+        "pasteImage.defaultName": "image",
+        "pasteImage.path": "${projectRoot}/docs/images",
+        "pasteImage.basePath": "${projectRoot}/docs/images",
+        "markdown.editor.pasteUrlAsFormattedLink.enabled": "smart",
+        "markdown.copyFiles.destination": {
+          "**/*": "docs/images/"
+        }
+      }
+    }
+  }
+}

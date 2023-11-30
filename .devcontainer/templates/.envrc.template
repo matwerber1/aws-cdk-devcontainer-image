@@ -1,0 +1,108 @@
+#!/bin/bash
+
+DIR=$(pwd)
+
+# Optional - if specified, will use "git config" to set your name for commits made in this repo
+git_name=''
+# Optional - if specified, will use "git config" to set your email for commits made in this repo
+git_email=''
+
+# If remote origin for repo is codecommit, you can provide an AWS profile and region
+# from your ~/.aws/config file to automatically configure the git-remote-codecommit helper
+# to use with git commands. This works for federated identities (assumed roles, AWS SSO).
+# If you're using SSH keys, this method won't work. I'm not sure, but don't think this works
+# with named IAM users and hard-coded access keys
+CODECOMMIT_PROFILE=''
+# The region where your codecommit repo is stored in the account associated with CODECOMMIT_PROFILE
+CODECOMMIT_REGION=''
+
+create_venv_if_not_exist() {
+    if [ ! -f ".venv/bin/activate" ]; then
+        python3 -m venv venv
+    fi
+}
+
+activate_venv() {
+    create_venv_if_not_exist
+    source .venv/bin/activate
+}
+
+install_python_dependencies_if_needed() {
+    if [ -f "requirements.txt" ]; then
+        echo "requirements.txt found, installing dependencies..."
+        activate_venv
+        pip install -r requirements.txt
+        mypy --install-types --non-interactive
+
+    fi
+
+    if [ -f "requirements-dev.txt" ]; then
+        echo "requirements-dev.txt found, installing dependencies..."
+        activate_venv
+        pip install -r requirements-dev.txt
+        mypy --install-types --non-interactive
+    fi
+
+    if [ -f "Pipfile" ]; then
+        echo "Pipfile found, installing dependencies using pipenv..."
+        activate_venv
+        pipenv install --dev
+        # There might be a pipenv-specific approach for types, not sure yer
+        mypy --install-types --non-interactive
+
+    if [ -f "pyproject.toml" ]; then
+        echo "pyproject.toml found, installing dependencies using poetry..."
+        activate_venv
+        poetry add -D poetry-types
+        poetry install
+    fi
+}
+
+install_git_remote_codecommit_python_package() {
+    if [ -f "requirements-dev.txt" ]; then
+        echo "requirements-dev.txt found, installing git-remote-codecommit with pip..."
+        activate_venv
+        pip install git-remote-codecommit
+
+    elif [ -f "Pipfile" ]; then
+        echo "Pipfile found, installing git-remote-codecommit with pipenv..."
+        activate_venv
+        pipenv install --dev git-remote-codecommit
+
+    elif [ -f "pyproject.toml" ]; then
+        echo "pyproject.toml found, installing git-remote-codecommit with poetry..."
+        activate_venv
+        poetry install git-remote-codecommit --group dev 
+    fi
+}
+
+configure_codecommit_if_needed() {
+    if git rev-parse --git-dir > /dev/null 2>&1; then
+        # Check if there is a remote named 'origin'
+
+        if git remote get-url origin > /dev/null 2>&1; then
+
+            # Get the URL of the 'origin' remote
+            origin_url=$(git remote get-url origin)
+
+            # Define a regular expression pattern for AWS CodeCommit repositories
+            # This pattern should cover SSH, HTTPS, and HTTPS GRC formats
+            codecommit_pattern="(git-codecommit\..*\.amazonaws\.com|ssh://git-codecommit\..*\.amazonaws\.com|https://git-codecommit\..*\.amazonaws\.com/v1/repos)"
+
+            # Check if the origin URL matches the CodeCommit pattern
+            if [[ $origin_url =~ $codecommit_pattern ]]; then
+                echo "Remote 'origin' is an AWS CodeCommit repository."
+                install_git_remote_codecommit_python_package
+                if [ -z "$CODECOMMIT_REGION" ] && [ -z "$CODECOMMIT_PROFILE" ]; then
+                    echo "Configuring git credential helper with AWS Profile $CODECOMMIT_PROFILE for $CODECOMMIT_REGION"
+                    git config credential.helper "!aws --profile $CODECOMMIT_PROFILE --region $CODECOMMIT_REGION codecommit credential-helper \$@"
+                    git config credential.UseHttpPath true
+                fi
+            fi
+        fi
+    fi
+}
+
+# Main execution
+install_python_dependencies_if_needed
+configure_codecommit_if_needed

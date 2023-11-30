@@ -1,0 +1,46 @@
+#!/bin/bash
+set -e
+
+add_to_gitignore() {
+  local ignore_string="$1"
+  local gitignore_file=".gitignore"
+
+  # Check if the .gitignore file exists, and create it if not
+  if [ ! -f "$gitignore_file" ]; then
+    touch "$gitignore_file"
+  fi
+
+  # Check if the string is already in .gitignore
+  if grep -qFx "$ignore_string" "$gitignore_file"; then
+    echo "The string is already in .gitignore."
+  else
+    # Add the string to .gitignore
+    echo "$ignore_string" >> "$gitignore_file"
+    echo "Added \"$ignore_string\" to .gitignore."
+  fi
+}
+
+if [ -n "$DEVCONTAINER_WORKSPACE_FOLDER" ]; then
+    if [ -n "$DEVCONTAINER_ASSETS_DIR" ]; then
+        template_dir="$DEVCONTAINER_ASSETS_DIR/templates"
+        aws_profile_template="$template_dir/.awsprofile.template"
+        envrc_template="$template_dir/.envrc.template"
+
+        if [ -f "$aws_profile_template" ]; then
+            cp $aws_profile_template $DEVCONTAINER_WORKSPACE_FOLDER/.awsprofile
+            add_to_gitignore .awsprofile
+        else
+            echo "The file $aws_profile_template does not exist."
+        fi
+
+        if [ -f "$envrc_template" ]; then
+            cp $envrc_template $DEVCONTAINER_WORKSPACE_FOLDER/.envrc
+        else
+            echo "The file $envrc_template does not exist."
+        fi
+    else
+        echo "DEVCONTAINER_ASSETS_DIR is not set. Please set to location of template files."
+    fi
+else
+    echo "DEVCONTAINER_WORKSPACE_FOLDER is not set. Please set this value to the root of your project workspace in this devcontainer."
+fi
